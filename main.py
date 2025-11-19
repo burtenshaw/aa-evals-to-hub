@@ -1,3 +1,13 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "huggingface-hub>=1.1.4",
+#     "python-dotenv>=1.2.1",
+#     "pyyaml>=6.0.3",
+#     "requests>=2.32.5",
+# ]
+# ///
+
 import argparse
 import os
 
