@@ -18,6 +18,7 @@ from huggingface_hub import ModelCard
 dotenv.load_dotenv()
 
 API_KEY = os.getenv("AA_API_KEY")
+HF_TOKEN = os.getenv("HF_TOKEN")
 URL = "https://artificialanalysis.ai/api/v2/data/llms/models"
 HEADERS = {"x-api-key": API_KEY}
 
@@ -26,7 +27,10 @@ def get_model_evaluations_data(creator_slug, model_name):
     response = requests.get(URL, headers=HEADERS)
     response_data = response.json()["data"]
     for model in response_data:
-        if model["model_creator"]["slug"] == creator_slug and model["slug"] == model_name:
+        if (
+            model["model_creator"]["slug"] == creator_slug
+            and model["slug"] == model_name
+        ):
             return model
     raise ValueError(f"Model {model_name} not found")
 
@@ -80,14 +84,30 @@ def main():
     parser.add_argument("--repo-id", type=str, required=True)
     args = parser.parse_args()
 
-    aa_evaluations_data = get_model_evaluations_data(creator_slug=args.creator_slug, model_name=args.model_name)
+    aa_evaluations_data = get_model_evaluations_data(
+        creator_slug=args.creator_slug, model_name=args.model_name
+    )
 
     model_index = aa_evaluations_to_model_index(model=aa_evaluations_data)
 
     card = ModelCard.load(args.repo_id)
     card.data["model-index"] = model_index
 
-    card.push_to_hub(args.repo_id)
+    commit_message = (
+        f"Add Artificial Analysis evaluations for {args.model_name}"
+    )
+    commit_description = (
+        f"This commit adds the Artificial Analysis evaluations for the {args.model_name} model to this repository. "
+        "To see the scores, visit the [Artificial Analysis](https://artificialanalysis.ai) website."
+    )
+
+    card.push_to_hub(
+        args.repo_id,
+        token=HF_TOKEN,
+        commit_message=commit_message,
+        commit_description=commit_description,
+        create_pr=True,
+    )
 
 
 if __name__ == "__main__":
